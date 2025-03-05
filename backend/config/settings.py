@@ -60,6 +60,12 @@ MIDDLEWARE = [
 
 # CORS 配置
 CORS_ALLOW_ALL_ORIGINS = True  # 开发环境中允许所有来源，生产环境应该限制
+# 如果前端和后端不在同一域，需要配置 CORS
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # 开发环境
+    "https://yourdomain.com",  # 生产环境
+]
 
 ROOT_URLCONF = 'config.urls'
 
@@ -139,4 +145,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CORS settings
+# 会话设置
+SESSION_COOKIE_SECURE = True  # 仅通过 HTTPS 发送 cookie（生产环境）
+SESSION_COOKIE_HTTPONLY = True  # 防止 JavaScript 访问 cookie
+SESSION_COOKIE_SAMESITE = 'None'  # 防止 CSRF 攻击
+SESSION_COOKIE_AGE = 86400  # 会话有效期（秒），这里设置为 24 小时
+
+# CSRF 设置
+CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
+
