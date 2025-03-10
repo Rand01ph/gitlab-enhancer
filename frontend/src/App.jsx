@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/auth/LoginPage';
 import Navbar from './components/layout/Navbar';
+import GitLabConfigPage from './pages/gitlab/GitLabConfigPage';
 // 导入其他页面...
 
 // 受保护的路由组件
@@ -58,6 +59,15 @@ function App() {
             </ProtectedRoute>
           } />
 
+          {/* GitLab 配置路由 */}
+          <Route path="/gitlab" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <GitLabConfigPage />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+
           {/* 添加其他受保护的路由 */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
@@ -66,4 +76,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
