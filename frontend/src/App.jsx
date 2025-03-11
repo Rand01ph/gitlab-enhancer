@@ -2,9 +2,16 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/auth/LoginPage';
 import Navbar from './components/layout/Navbar';
-import GitLabConfigPage from './pages/gitlab/GitLabConfigPage';
-// 导入其他页面...
 
+// Hook 页面
+import HooksListPage from './pages/hooks/HooksListPage';
+import HookDetailPage from './pages/hooks/HookDetailPage';
+import HookCreatePage from './pages/hooks/HookCreatePage';
+import HookEditPage from './pages/hooks/HookEditPage';
+import HookDeployPage from './pages/hooks/HookDeployPage';
+
+// GitLab 配置页面
+import GitLabConfigPage from './pages/gitlab/GitLabConfigPage';
 // 受保护的路由组件
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -59,6 +66,46 @@ function App() {
             </ProtectedRoute>
           } />
 
+          {/* Hook 路由 */}
+          <Route path="/hooks" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <HooksListPage />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/hooks/new" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <HookCreatePage />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/hooks/:id" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <HookDetailPage />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/hooks/:id/edit" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <HookEditPage />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/hooks/:id/deploy" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <HookDeployPage />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
           {/* GitLab 配置路由 */}
           <Route path="/gitlab" element={
             <ProtectedRoute>
@@ -68,7 +115,6 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* 添加其他受保护的路由 */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>

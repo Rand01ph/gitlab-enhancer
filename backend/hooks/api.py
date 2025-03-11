@@ -1,5 +1,5 @@
 from typing import List
-from ninja import Router, File
+from ninja import Router, File, Form
 from ninja.files import UploadedFile
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
@@ -47,17 +47,25 @@ def list_hooks(request):
     return result
 
 @router.post("/", response=HookSchema)
-def create_hook(request, payload: HookCreateSchema, file: UploadedFile = File(...)):
+def create_hook(
+    request,
+    name: str = Form(...),
+    description: str = Form(""),
+    hook_type: str = Form(...),
+    file_type: str = Form(...),
+    script_language: str = Form(None),
+    file: UploadedFile = File(...)
+):
     """上传新Hook"""
     # 在实际应用中，应该从请求中获取用户
     user = User.objects.first()  # 临时使用第一个用户，实际应该使用认证用户
-    
+
     hook = Hook.objects.create(
-        name=payload.name,
-        description=payload.description,
-        hook_type=payload.hook_type,
-        file_type=payload.file_type,
-        script_language=payload.script_language,
+        name=name,
+        description=description,
+        hook_type=hook_type,
+        file_type=file_type,
+        script_language=script_language,
         file=file,
         created_by=user
     )
@@ -87,7 +95,7 @@ def create_hook(request, payload: HookCreateSchema, file: UploadedFile = File(..
         "current_version": 1
     }
 
-@router.get("/{hook_id}", response=HookSchema)
+@router.get("/{hook_id}/", response=HookSchema)
 def get_hook(request, hook_id: int):
     """获取Hook详情"""
     hook = get_object_or_404(Hook, id=hook_id)
@@ -111,24 +119,28 @@ def get_hook(request, hook_id: int):
         "current_version": version_number
     }
 
-@router.put("/{hook_id}", response=HookSchema)
-def update_hook(request, hook_id: int, payload: HookUpdateSchema, file: UploadedFile = None):
+@router.put("/{hook_id}/", response=HookSchema)
+def update_hook(
+    request,
+    hook_id: int,
+    name: str = Form(...),
+    description: str = Form(""),
+    hook_type: str = Form(...),
+    file_type: str = Form(...),
+    script_language: str = Form(None),
+    file: UploadedFile = File(None)
+):
     """更新Hook（上传新版本）"""
     hook = get_object_or_404(Hook, id=hook_id)
     user = User.objects.first()  # 临时使用第一个用户，实际应该使用认证用户
     
     # 更新Hook基本信息
-    if payload.name:
-        hook.name = payload.name
-    if payload.description:
-        hook.description = payload.description
-    if payload.hook_type:
-        hook.hook_type = payload.hook_type
-    if payload.file_type:
-        hook.file_type = payload.file_type
-    if payload.script_language:
-        hook.script_language = payload.script_language
-    
+    hook.name = name
+    hook.description = description
+    hook.hook_type = hook_type
+    hook.file_type = file_type
+    hook.script_language = script_language
+
     # 如果提供了新文件，则更新文件并创建新版本
     if file:
         hook.file = file
@@ -168,14 +180,14 @@ def update_hook(request, hook_id: int, payload: HookUpdateSchema, file: Uploaded
         "current_version": version_number
     }
 
-@router.delete("/{hook_id}")
+@router.delete("/{hook_id}/")
 def delete_hook(request, hook_id: int):
     """删除Hook"""
     hook = get_object_or_404(Hook, id=hook_id)
     hook.delete()
     return {"success": True}
 
-@router.get("/{hook_id}/versions", response=List[HookVersionSchema])
+@router.get("/{hook_id}/versions/", response=List[HookVersionSchema])
 def get_hook_versions(request, hook_id: int):
     """获取Hook版本历史"""
     hook = get_object_or_404(Hook, id=hook_id)
@@ -192,7 +204,7 @@ def get_hook_versions(request, hook_id: int):
     
     return result
 
-@router.get("/{hook_id}/versions/{version_id}/download")
+@router.get("/{hook_id}/versions/{version_id}/download/")
 def download_hook_version(request, hook_id: int, version_id: int):
     """下载特定版本的Hook文件"""
     hook = get_object_or_404(Hook, id=hook_id)

@@ -1,6 +1,8 @@
 from django.urls import path
 from ninja import NinjaAPI
 from ninja.security import django_auth
+from ninja.errors import ValidationError
+
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from django.http import HttpRequest
 from django.contrib.auth.models import User
@@ -29,6 +31,11 @@ class ErrorResponse(BaseModel):
     message: str
 
 api = NinjaAPI(title="GitLab Enhancer API", version="1.0.0")
+
+@api.exception_handler(ValidationError)
+def custom_validation_errors(request, exc):
+    print(exc.errors)  # <--------------------- !!!!
+    return api.create_response(request, {"detail": exc.errors}, status=422)
 
 # 注册各模块路由 - 添加认证要求
 api.add_router("/hooks", hooks_router, auth=django_auth)

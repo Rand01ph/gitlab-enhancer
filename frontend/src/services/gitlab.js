@@ -4,9 +4,9 @@ import api from './auth.js';
 export const fetchGitLabConfigs = async () => {
   try {
     const response = await api.get('/gitlab/configs');
-    return response.data.items || [];
+    return response.data.items || response.data;
   } catch (error) {
-    console.error('Error in fetchGitLabConfigs:', error);
+    console.error('Error fetching GitLab configs:', error);
     throw error;
   }
 };
@@ -17,6 +17,7 @@ export const fetchGitLabConfig = async (configId) => {
     const response = await api.get(`/gitlab/configs/${configId}`);
     return response.data;
   } catch (error) {
+    console.error(`Error fetching GitLab config ${configId}:`, error);
     throw error;
   }
 };
@@ -27,6 +28,7 @@ export const createGitLabConfig = async (configData) => {
     const response = await api.post('/gitlab/configs', configData);
     return response.data;
   } catch (error) {
+    console.error('Error creating GitLab config:', error);
     throw error;
   }
 };
@@ -42,6 +44,7 @@ export const updateGitLabConfig = async (configId, configData) => {
     const response = await api.put(`/gitlab/configs/${configId}`, dataToSend);
     return response.data;
   } catch (error) {
+    console.error(`Error updating GitLab config ${configId}:`, error);
     throw error;
   }
 };
@@ -52,6 +55,7 @@ export const deleteGitLabConfig = async (configId) => {
     const response = await api.delete(`/gitlab/configs/${configId}`);
     return response.data;
   } catch (error) {
+    console.error(`Error deleting GitLab config ${configId}:`, error);
     throw error;
   }
 };
@@ -62,6 +66,40 @@ export const testGitLabConnection = async (configId) => {
     const response = await api.post(`/gitlab/configs/${configId}/test`);
     return response.data;
   } catch (error) {
+    console.error(`Error testing GitLab connection for config ${configId}:`, error);
+    throw error;
+  }
+};
+
+// 获取 GitLab 项目列表
+export const fetchGitLabProjects = async (configId) => {
+  try {
+    const response = await api.get(`/gitlab/configs/${configId}/projects`);
+    return response.data.items || response.data;
+  } catch (error) {
+    console.error(`Error fetching GitLab projects for config ${configId}:`, error);
+    throw error;
+  }
+};
+
+// 获取 GitLab 组列表
+export const fetchGitLabGroups = async (configId) => {
+  try {
+    const response = await api.get(`/gitlab/configs/${configId}/groups`);
+    return response.data.items || response.data;
+  } catch (error) {
+    console.error(`Error fetching GitLab groups for config ${configId}:`, error);
+    throw error;
+  }
+};
+
+// 获取 GitLab 服务器信息
+export const fetchGitLabServerInfo = async (configId) => {
+  try {
+    const response = await api.get(`/gitlab/configs/${configId}/server-info`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching GitLab server info for config ${configId}:`, error);
     throw error;
   }
 };
