@@ -11,6 +11,9 @@ const GitLabConfigForm = ({ config, onSuccess, onCancel }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // 判断是新建还是编辑模式
+  const isEditMode = !!config;
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -22,19 +25,35 @@ const GitLabConfigForm = ({ config, onSuccess, onCancel }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // 简单验证
-    if (!formData.url || !formData.token) {
-      setError('URL and token are required');
+    // 验证 URL 必须填写
+    if (!formData.url) {
+      setError('URL is required');
+      return;
+    }
+
+    // 新建模式下，token 必须填写；编辑模式下，token 可以为空
+    if (!isEditMode && !formData.token) {
+      setError('Token is required for new configurations');
       return;
     }
 
     try {
       setLoading(true);
-      if (config) {
-        await updateGitLabConfig(config.id, formData);
-      } else {
-        await createGitLabConfig(formData);
+
+      // 准备提交的数据
+      const dataToSubmit = { ...formData };
+
+      // 如果是编辑模式且 token 为空，删除 token 字段，这样后端不会更新 token
+      if (isEditMode && !dataToSubmit.token) {
+        delete dataToSubmit.token;
       }
+
+      if (isEditMode) {
+        await updateGitLabConfig(config.id, dataToSubmit);
+      } else {
+        await createGitLabConfig(dataToSubmit);
+      }
+
       onSuccess();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save GitLab configuration');
@@ -75,20 +94,23 @@ const GitLabConfigForm = ({ config, onSuccess, onCancel }) => {
       <div className="form-control w-full">
         <label className="label">
           <span className="label-text">Access Token</span>
+          {isEditMode && (
+            <span className="label-text-alt text-info">Leave empty to keep current token</span>
+          )}
         </label>
-        <input
+          <input
           type="text"
           name="token"
-          placeholder="glpat-xxxxxxxxxx"
+          placeholder={isEditMode ? "Leave empty to keep current token" : "glpat-xxxxxxxxxx"}
           className="input input-bordered w-full"
           value={formData.token}
-          onChange={handleChange}
-          required
-        />
+            onChange={handleChange}
+          required={!isEditMode} // 只在新建模式下必填
+          />
         <label className="label">
           <span className="label-text-alt">
-            <a href="https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html" 
-               target="_blank" 
+            <a href="https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html"
+               target="_blank"
                rel="noopener noreferrer"
                className="link link-primary">
               How to create a GitLab access token
@@ -111,17 +133,17 @@ const GitLabConfigForm = ({ config, onSuccess, onCancel }) => {
       </div>
 
       <div className="modal-action">
-        <button 
-          type="button" 
-          className="btn btn-ghost" 
+        <button
+          type="button"
+          className="btn btn-ghost"
           onClick={onCancel}
           disabled={loading}
         >
           Cancel
         </button>
-        <button 
-          type="submit" 
-          className="btn btn-primary" 
+        <button
+          type="submit"
+          className="btn btn-primary"
           disabled={loading}
         >
           {loading ? (

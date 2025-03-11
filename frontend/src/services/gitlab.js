@@ -4,8 +4,9 @@ import api from './auth.js';
 export const fetchGitLabConfigs = async () => {
   try {
     const response = await api.get('/gitlab/configs');
-    return response.data;
+    return response.data.items || [];
   } catch (error) {
+    console.error('Error in fetchGitLabConfigs:', error);
     throw error;
   }
 };
@@ -33,7 +34,12 @@ export const createGitLabConfig = async (configData) => {
 // 更新 GitLab 配置
 export const updateGitLabConfig = async (configId, configData) => {
   try {
-    const response = await api.put(`/gitlab/configs/${configId}`, configData);
+    // 如果 token 为空字符串，将其设为 null，表示不更新 token
+    const dataToSend = { ...configData };
+    if (dataToSend.token === '') {
+      dataToSend.token = null;
+    }
+    const response = await api.put(`/gitlab/configs/${configId}`, dataToSend);
     return response.data;
   } catch (error) {
     throw error;

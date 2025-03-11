@@ -14,6 +14,11 @@ class GitLabConfigCreateSchema(Schema):
     token: str
     is_active: bool = True
 
+class GitLabConfigUpdateSchema(Schema):
+    url: str
+    token: Optional[str] = None
+    is_active: bool = True
+
 class GitLabProjectSchema(Schema):
     id: str
     name: str

@@ -1,8 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const GitLabConfigList = ({ configs, onEdit, onDelete, onTest }) => {
-  if (configs.length === 0) {
+const GitLabConfigList = ({ configs = [], onEdit, onDelete, onTest }) => {
+  // 确保 configs 是数组
+  const configArray = Array.isArray(configs) ? configs : [];
+  if (configArray.length === 0) {
     return (
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
@@ -25,7 +27,7 @@ const GitLabConfigList = ({ configs, onEdit, onDelete, onTest }) => {
           </tr>
         </thead>
         <tbody>
-          {configs.map(config => (
+          {configArray.map(config => (
             <tr key={config.id}>
               <td>{config.url}</td>
               <td>
@@ -68,7 +70,7 @@ const GitLabConfigList = ({ configs, onEdit, onDelete, onTest }) => {
 };
 
 GitLabConfigList.propTypes = {
-  configs: PropTypes.array.isRequired,
+  configs: PropTypes.array,
   onEdit: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
   onTest: PropTypes.func.isRequired

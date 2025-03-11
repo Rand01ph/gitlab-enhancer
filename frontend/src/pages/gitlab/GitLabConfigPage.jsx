@@ -5,29 +5,36 @@ import GitLabConfigForm from '../../components/gitlab/GitLabConfigForm';
 import { fetchGitLabConfigs, deleteGitLabConfig, testGitLabConnection } from '../../services/gitlab';
 
 const GitLabConfigPage = () => {
-  const [configs, setConfigs] = useState([]);
+  const [configs, setConfigs] = useState([]); // 初始化为空数组
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState(null);
   const navigate = useNavigate();
 
-  // 加载 GitLab 配置列表
-  const loadConfigs = async () => {
-    try {
-      setLoading(true);
-      const data = await fetchGitLabConfigs();
-      setConfigs(data);
-      setError(null);
-    } catch (err) {
-      setError('Failed to load GitLab configurations');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const loadConfigs = async () => {
+      try {
+        setLoading(true);
+        const response = await fetchGitLabConfigs();
+
+        // 检查响应格式，确保 data 是数组
+        const configData = response.data || [];
+
+        // 如果 response 本身就是数组，则直接使用
+        const configArray = Array.isArray(response) ? response :
+                           (Array.isArray(configData) ? configData : []);
+
+        setConfigs(configArray);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading GitLab configs:', err);
+        setError('Failed to load GitLab configurations');
+        setConfigs([]); // 出错时设置为空数组
+      } finally {
+        setLoading(false);
+      }
+    };
     loadConfigs();
   }, []);
 
@@ -75,7 +82,7 @@ const GitLabConfigPage = () => {
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">GitLab Configurations</h1>
-        <button 
+        <button
           onClick={handleAddConfig}
           className="btn btn-primary"
         >
@@ -97,7 +104,7 @@ const GitLabConfigPage = () => {
           <span className="loading loading-spinner loading-lg"></span>
         </div>
       ) : (
-        <GitLabConfigList 
+        <GitLabConfigList
           configs={configs}
           onEdit={handleEditConfig}
           onDelete={handleDeleteConfig}
@@ -112,7 +119,7 @@ const GitLabConfigPage = () => {
             <h3 className="font-bold text-lg mb-4">
               {editingConfig ? 'Edit GitLab Configuration' : 'Add GitLab Configuration'}
             </h3>
-            <GitLabConfigForm 
+            <GitLabConfigForm
               config={editingConfig}
               onSuccess={handleFormSuccess}
               onCancel={() => setIsModalOpen(false)}

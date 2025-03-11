@@ -6,6 +6,7 @@ from .models import GitLabConfig
 from .schemas import (
     GitLabConfigSchema,
     GitLabConfigCreateSchema,
+    GitLabConfigUpdateSchema,
     GitLabProjectSchema,
     GitLabGroupSchema
 )
@@ -40,14 +41,19 @@ def create_gitlab_config(request, payload: GitLabConfigCreateSchema):
 
 # 更新 GitLab 配置
 @router.put("/configs/{config_id}", response=GitLabConfigSchema)
-def update_gitlab_config(request, config_id: int, payload: GitLabConfigCreateSchema):
+def update_gitlab_config(request, config_id: int, payload: GitLabConfigUpdateSchema):
     config = get_object_or_404(GitLabConfig, id=config_id)
+
+    # 更新 URL 和活动状态
     config.url = payload.url
-    config.token = payload.token
     config.is_active = payload.is_active
+
+    # 只有当 token 字段存在且不为空时，才更新 token
+    if hasattr(payload, 'token') and payload.token:
+        config.token = payload.token
+
     config.save()
     return config
-
 
 # 删除 GitLab 配置
 @router.delete("/configs/{config_id}", response={"success": bool})
@@ -55,7 +61,6 @@ def delete_gitlab_config(request, config_id: int):
     config = get_object_or_404(GitLabConfig, id=config_id)
     config.delete()
     return {"success": True}
-
 
 # 测试 GitLab 连接
 @router.post("/configs/{config_id}/test", response={"success": bool, "message": str})
