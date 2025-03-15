@@ -13,6 +13,7 @@ import HookDeployPage from './pages/hooks/HookDeployPage';
 import DeploymentsListPage from './pages/deployments/DeploymentsListPage';
 import DeploymentDetailPage from './pages/deployments/DeploymentDetailPage';
 import GitLabConfigPage from './pages/gitlab/GitLabConfigPage';
+import AuditLogsPage from './pages/audit/AuditLogsPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // 受保护的路由组件
@@ -101,6 +102,7 @@ function App() {
               </AppLayout>
             </ProtectedRoute>
           } />
+
           <Route path="/deployments" element={
             <ProtectedRoute>
               <AppLayout>
@@ -124,6 +126,14 @@ function App() {
               </AppLayout>
             </ProtectedRoute>
           } />
+          <Route path="/audit-logs" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AuditLogsPage />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+
           <Route path="*" element={
             <ProtectedRoute>
               <AppLayout>

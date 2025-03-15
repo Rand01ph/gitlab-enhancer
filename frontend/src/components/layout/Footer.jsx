@@ -12,6 +12,7 @@ const Footer = () => {
           <Link to="/hooks" className="link link-hover">Hooks</Link>
           <Link to="/deployments" className="link link-hover">部署</Link>
           <Link to="/gitlab/config" className="link link-hover">GitLab 配置</Link>
+          <Link to="/audit-logs" className="link link-hover">审计日志</Link>
         </div>
         <div>
           <p>Copyright © {currentYear} - GitLab Enhancer</p>

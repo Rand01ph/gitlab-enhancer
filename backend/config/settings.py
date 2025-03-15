@@ -56,6 +56,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'audit.middleware.AuditLogMiddleware',
 ]
 
 # CORS 配置
@@ -153,4 +154,3 @@ SESSION_COOKIE_AGE = 86400  # 会话有效期（秒），这里设置为 24 小�
 
 # CSRF 设置
 CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
-

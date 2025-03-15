@@ -56,7 +56,7 @@ def update_gitlab_config(request, config_id: int, payload: GitLabConfigUpdateSch
     return config
 
 # 删除 GitLab 配置
-@router.delete("/configs/{config_id}", response={"success": bool})
+@router.delete("/configs/{config_id}")
 def delete_gitlab_config(request, config_id: int):
     config = get_object_or_404(GitLabConfig, id=config_id)
     config.delete()

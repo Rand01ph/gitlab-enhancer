@@ -2,48 +2,48 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GitLabConfigList from '../../components/gitlab/GitLabConfigList';
 import GitLabConfigForm from '../../components/gitlab/GitLabConfigForm';
-import { fetchGitLabConfigs, deleteGitLabConfig, testGitLabConnection } from '../../services/gitlab';
+import { fetchGitLabConfigs, deleteGitLabConfig, testGitLabConnection, createGitLabConfig, updateGitLabConfig } from '../../services/gitlab';
 
 const GitLabConfigPage = () => {
-  const [configs, setConfigs] = useState([]); // 初始化为空数组
+  const [configs, setConfigs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState(null);
   const navigate = useNavigate();
 
+  // 只在组件挂载时加载配置
   useEffect(() => {
-    const loadConfigs = async () => {
+    const loadInitialConfigs = async () => {
       try {
         setLoading(true);
         const response = await fetchGitLabConfigs();
 
-        // 检查响应格式，确保 data 是数组
-        const configData = response.data || [];
-
-        // 如果 response 本身就是数组，则直接使用
+        // 处理响应数据
         const configArray = Array.isArray(response) ? response :
-                           (Array.isArray(configData) ? configData : []);
+                           (Array.isArray(response.data) ? response.data :
+                           (response.items ? response.items : []));
 
         setConfigs(configArray);
         setError(null);
       } catch (err) {
         console.error('Error loading GitLab configs:', err);
         setError('Failed to load GitLab configurations');
-        setConfigs([]); // 出错时设置为空数组
+        setConfigs([]);
       } finally {
         setLoading(false);
       }
     };
-    loadConfigs();
+    loadInitialConfigs();
   }, []);
 
-  // 处理添加/编辑表单的打开
+  // 处理添加配置
   const handleAddConfig = () => {
     setEditingConfig(null);
     setIsModalOpen(true);
   };
 
+  // 处理编辑配置
   const handleEditConfig = (config) => {
     setEditingConfig(config);
     setIsModalOpen(true);
@@ -54,11 +54,12 @@ const GitLabConfigPage = () => {
     if (window.confirm('Are you sure you want to delete this GitLab configuration?')) {
       try {
         await deleteGitLabConfig(configId);
-        setConfigs(configs.filter(config => config.id !== configId));
-      } catch (err) {
-        setError('Failed to delete GitLab configuration');
+        // 直接更新本地状态，无需重新请求
+        setConfigs(prevConfigs => prevConfigs.filter(config => config.id !== configId));
+    } catch (err) {
+        setError('Failed to delete GitLab configuration: ' + (err.response?.data?.detail || err.message));
         console.error(err);
-      }
+    }
     }
   };
 
@@ -66,17 +67,45 @@ const GitLabConfigPage = () => {
   const handleTestConnection = async (configId) => {
     try {
       const result = await testGitLabConnection(configId);
-      alert(result.message);
+      alert(result.message || 'Connection successful');
     } catch (err) {
       alert('Failed to test connection: ' + (err.response?.data?.message || err.message));
     }
   };
 
-  // 处理表单提交成功
-  const handleFormSuccess = () => {
-    setIsModalOpen(false);
-    loadConfigs();
-  };
+  // 处理表单提交
+  const handleFormSubmit = async (configData, isEdit) => {
+    try {
+      let updatedConfig;
+
+      if (isEdit) {
+        // 编辑现有配置
+        updatedConfig = await updateGitLabConfig(editingConfig.id, configData);
+
+        // 更新本地状态
+        setConfigs(prevConfigs =>
+          prevConfigs.map(config =>
+            config.id === updatedConfig.id ? updatedConfig : config
+          )
+  );
+      } else {
+        // 创建新配置
+        const newConfig = await createGitLabConfig(configData);
+
+        // 更新本地状态，添加新配置
+        setConfigs(prevConfigs => [...prevConfigs, newConfig]);
+      }
+
+      // 关闭模态框
+      setIsModalOpen(false);
+      setEditingConfig(null);
+
+      return true;
+    } catch (err) {
+      console.error('Error saving GitLab config:', err);
+      return { error: err.response?.data?.detail || err.message };
+    }
+};
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -121,7 +150,7 @@ const GitLabConfigPage = () => {
             </h3>
             <GitLabConfigForm
               config={editingConfig}
-              onSuccess={handleFormSuccess}
+              onSubmit={(data) => handleFormSubmit(data, !!editingConfig)}
               onCancel={() => setIsModalOpen(false)}
             />
           </div>
