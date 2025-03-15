@@ -1,42 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchHook } from '../../services/hooks';
-import { fetchGitLabConfigs } from '../../services/gitlab';
+import { deployHook } from '../../services/deployments';
 import HookDeployForm from '../../components/hooks/HookDeployForm';
 
 const HookDeployPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [hook, setHook] = useState(null);
-  const [gitlabConfigs, setGitlabConfigs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deploying, setDeploying] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const loadData = async () => {
+    const loadHook = async () => {
       try {
         setLoading(true);
-        const [hookData, configsData] = await Promise.all([
-          fetchHook(id),
-          fetchGitLabConfigs()
-        ]);
-        setHook(hookData);
-        setGitlabConfigs(Array.isArray(configsData) ? configsData : []);
+        const data = await fetchHook(id);
+        setHook(data);
         setError(null);
       } catch (err) {
-        console.error('Error loading data:', err);
-        setError('Failed to load required data');
+        console.error('Error loading hook:', err);
+        setError('Failed to load hook details');
       } finally {
         setLoading(false);
       }
     };
 
-    loadData();
+    loadHook();
   }, [id]);
+
+  const handleDeploy = async (formData) => {
+    try {
+      setDeploying(true);
+      const result = await deployHook(id, formData);
+      navigate(`/hooks/${id}?deployed=true`);
+    } catch (err) {
+      console.error('Error deploying hook:', err);
+      setError('Failed to deploy hook: ' + (err.response?.data?.detail || err.message));
+      setDeploying(false);
+    }
+  };
 
   const handleCancel = () => {
     navigate(`/hooks/${id}`);
-  };
+};
 
   if (loading) {
     return (
@@ -49,7 +57,10 @@ const HookDeployPage = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Deploy Hook: {hook?.name}</h1>
+        <h1 className="text-3xl font-bold">部署 Hook</h1>
+        <p className="text-gray-600">
+          {hook?.name} ({hook?.hook_type})
+        </p>
       </div>
 
       {error && (
@@ -63,11 +74,16 @@ const HookDeployPage = () => {
 
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
+          <p className="mb-4">
+            选择部署级别和目标，将此 Hook 部署到 GitLab。
+          </p>
+
           {hook && (
-            <HookDeployForm 
+            <HookDeployForm
               hook={hook}
-              gitlabConfigs={gitlabConfigs}
+              onSubmit={handleDeploy}
               onCancel={handleCancel}
+              loading={deploying}
             />
           )}
         </div>

@@ -1,17 +1,20 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/auth/LoginPage';
 import Navbar from './components/layout/Navbar';
-
-// Hook 页面
+import Footer from './components/layout/Footer';
+import HomePage from './pages/HomePage';
 import HooksListPage from './pages/hooks/HooksListPage';
 import HookDetailPage from './pages/hooks/HookDetailPage';
 import HookCreatePage from './pages/hooks/HookCreatePage';
 import HookEditPage from './pages/hooks/HookEditPage';
 import HookDeployPage from './pages/hooks/HookDeployPage';
-
-// GitLab 配置页面
+import DeploymentsListPage from './pages/deployments/DeploymentsListPage';
+import DeploymentDetailPage from './pages/deployments/DeploymentDetailPage';
 import GitLabConfigPage from './pages/gitlab/GitLabConfigPage';
+import NotFoundPage from './pages/NotFoundPage';
+
 // 受保护的路由组件
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -34,16 +37,12 @@ const ProtectedRoute = ({ children }) => {
 // 应用布局组件
 const AppLayout = ({ children }) => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-grow">
         {children}
       </main>
-      <footer className="footer footer-center p-4 bg-base-300 text-base-content">
-        <div>
-          <p>© 2025 - Git Hooks Manager</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
@@ -58,15 +57,11 @@ function App() {
           <Route path="/" element={
             <ProtectedRoute>
               <AppLayout>
-                <div className="container mx-auto px-4 py-6">
-                  <h1 className="text-3xl font-bold">Dashboard</h1>
-                  {/* Dashboard content */}
-                </div>
+                <HomePage />
               </AppLayout>
             </ProtectedRoute>
           } />
 
-          {/* Hook 路由 */}
           <Route path="/hooks" element={
             <ProtectedRoute>
               <AppLayout>
@@ -106,16 +101,36 @@ function App() {
               </AppLayout>
             </ProtectedRoute>
           } />
-          {/* GitLab 配置路由 */}
-          <Route path="/gitlab" element={
+          <Route path="/deployments" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <DeploymentsListPage />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/deployments/:id" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <DeploymentDetailPage />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/gitlab/config" element={
             <ProtectedRoute>
               <AppLayout>
                 <GitLabConfigPage />
               </AppLayout>
             </ProtectedRoute>
           } />
-
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="*" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <NotFoundPage />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
         </Routes>
       </Router>
     </AuthProvider>

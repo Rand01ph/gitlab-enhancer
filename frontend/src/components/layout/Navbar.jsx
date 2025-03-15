@@ -22,7 +22,7 @@ const Navbar = () => {
           <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
             <li><Link to="/hooks">Hooks</Link></li>
             <li><Link to="/deployments">Deployments</Link></li>
-            <li><Link to="/gitlab">GitLab</Link></li>
+            <li><Link to="/gitlab/config">GitLab</Link></li>
             <li><Link to="/audit">Audit Logs</Link></li>
           </ul>
         </div>
@@ -32,7 +32,7 @@ const Navbar = () => {
         <ul className="menu menu-horizontal px-1">
           <li><Link to="/hooks">Hooks</Link></li>
           <li><Link to="/deployments">Deployments</Link></li>
-          <li><Link to="/gitlab">GitLab</Link></li>
+          <li><Link to="/gitlab/config">GitLab</Link></li>
           <li><Link to="/audit">Audit Logs</Link></li>
         </ul>
       </div>
