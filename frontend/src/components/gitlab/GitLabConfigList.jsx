@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const GitLabConfigList = ({ configs = [], onEdit, onDelete, onTest }) => {
+const GitLabConfigList = ({ configs = [], onEdit, onDelete, onTest, testingId }) => {
   // 确保 configs 是数组
   const configArray = Array.isArray(configs) ? configs : [];
   if (configArray.length === 0) {
@@ -44,8 +44,14 @@ const GitLabConfigList = ({ configs = [], onEdit, onDelete, onTest }) => {
                   <button 
                     onClick={() => onTest(config.id)} 
                     className="btn btn-xs btn-outline btn-info"
+                    disabled={testingId === config.id}
                   >
-                    Test
+                    {testingId === config.id ? (
+                      <>
+                        <span className="loading loading-spinner loading-xs mr-1"></span>
+                        Testing...
+                      </>
+                    ) : 'Test'}
                   </button>
                   <button 
                     onClick={() => onEdit(config)} 
@@ -73,7 +79,8 @@ GitLabConfigList.propTypes = {
   configs: PropTypes.array,
   onEdit: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
-  onTest: PropTypes.func.isRequired
+  onTest: PropTypes.func.isRequired,
+  testingId: PropTypes.number
 };
 
 export default GitLabConfigList;

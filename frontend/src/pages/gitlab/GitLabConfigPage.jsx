@@ -10,6 +10,8 @@ const GitLabConfigPage = () => {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState(null);
+  const [testResult, setTestResult] = useState(null); // 添加测试结果状态
+  const [testingId, setTestingId] = useState(null); // 添加正在测试的配置ID状态
   const navigate = useNavigate();
 
   // 只在组件挂载时加载配置
@@ -56,21 +58,41 @@ const GitLabConfigPage = () => {
         await deleteGitLabConfig(configId);
         // 直接更新本地状态，无需重新请求
         setConfigs(prevConfigs => prevConfigs.filter(config => config.id !== configId));
-    } catch (err) {
+      } catch (err) {
         setError('Failed to delete GitLab configuration: ' + (err.response?.data?.detail || err.message));
         console.error(err);
-    }
+      }
     }
   };
 
   // 处理测试连接
   const handleTestConnection = async (configId) => {
     try {
+      setTestingId(configId);
       const result = await testGitLabConnection(configId);
-      alert(result.message || 'Connection successful');
+      
+      // 获取当前测试的配置信息，用于显示在结果中
+      const config = configs.find(c => c.id === configId);
+      
+      setTestResult({
+        success: result.success,
+        message: result.message || 'Connection successful',
+        configUrl: config?.url || 'Unknown GitLab instance'
+      });
     } catch (err) {
-      alert('Failed to test connection: ' + (err.response?.data?.message || err.message));
+      setTestResult({
+        success: false,
+        message: err.response?.data?.message || err.message || 'Connection failed',
+        configUrl: configs.find(c => c.id === configId)?.url || 'Unknown GitLab instance'
+      });
+    } finally {
+      setTestingId(null);
     }
+  };
+
+  // 关闭测试结果模态框
+  const closeTestResult = () => {
+    setTestResult(null);
   };
 
   // 处理表单提交
@@ -87,7 +109,7 @@ const GitLabConfigPage = () => {
           prevConfigs.map(config =>
             config.id === updatedConfig.id ? updatedConfig : config
           )
-  );
+        );
       } else {
         // 创建新配置
         const newConfig = await createGitLabConfig(configData);
@@ -105,7 +127,7 @@ const GitLabConfigPage = () => {
       console.error('Error saving GitLab config:', err);
       return { error: err.response?.data?.detail || err.message };
     }
-};
+  };
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -138,6 +160,7 @@ const GitLabConfigPage = () => {
           onEdit={handleEditConfig}
           onDelete={handleDeleteConfig}
           onTest={handleTestConnection}
+          testingId={testingId}
         />
       )}
 
@@ -155,6 +178,48 @@ const GitLabConfigPage = () => {
             />
           </div>
           <div className="modal-backdrop" onClick={() => setIsModalOpen(false)}></div>
+        </div>
+      )}
+
+      {/* 测试结果模态框 */}
+      {testResult && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-4">
+              Connection Test Result
+            </h3>
+            <div className={`alert ${testResult.success ? 'alert-success' : 'alert-error'} mb-4`}>
+              <div className="flex items-center">
+                {testResult.success ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+                <span>{testResult.success ? 'Success' : 'Failed'}</span>
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <p className="font-semibold">GitLab Instance:</p>
+              <p className="text-sm">{testResult.configUrl}</p>
+            </div>
+            
+            <div className="mb-6">
+              <p className="font-semibold">Message:</p>
+              <p className="text-sm">{testResult.message}</p>
+            </div>
+            
+            <div className="modal-action">
+              <button onClick={closeTestResult} className="btn">
+                Close
+              </button>
+            </div>
+          </div>
+          <div className="modal-backdrop" onClick={closeTestResult}></div>
         </div>
       )}
     </div>

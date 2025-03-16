@@ -8,7 +8,9 @@ from .schemas import (
     GitLabConfigCreateSchema,
     GitLabConfigUpdateSchema,
     GitLabProjectSchema,
-    GitLabGroupSchema
+    GitLabGroupSchema,
+    SuccessResponseSchema,  # 添加这个导入
+    TestConnectionResponseSchema  # 添加这个导入
 )
 from .utils import test_gitlab_connection, get_gitlab_projects, get_gitlab_groups
 
@@ -56,14 +58,14 @@ def update_gitlab_config(request, config_id: int, payload: GitLabConfigUpdateSch
     return config
 
 # 删除 GitLab 配置
-@router.delete("/configs/{config_id}")
+@router.delete("/configs/{config_id}", response=SuccessResponseSchema)
 def delete_gitlab_config(request, config_id: int):
     config = get_object_or_404(GitLabConfig, id=config_id)
     config.delete()
     return {"success": True}
 
 # 测试 GitLab 连接
-@router.post("/configs/{config_id}/test", response={"success": bool, "message": str})
+@router.post("/configs/{config_id}/test", response=TestConnectionResponseSchema)
 def test_gitlab_connection_endpoint(request, config_id: int):
     config = get_object_or_404(GitLabConfig, id=config_id)
     result = test_gitlab_connection(config.url, config.token)
